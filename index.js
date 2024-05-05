@@ -148,6 +148,9 @@ app.get('/api/users/:_id/logs', (req, res) => {
   // Crear el objeto de usuario con la propiedad count
   const userWithCount = { ...user, count: exerciseCount };
 
+  // Log para mostrar el objeto de usuario con la propiedad count
+  console.log('Respuesta enviada:', userWithCount);
+
   // Devolver el objeto de usuario con la propiedad count
   res.json(userWithCount);
 });
