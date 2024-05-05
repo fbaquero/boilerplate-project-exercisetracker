@@ -39,8 +39,8 @@ app.post('/api/users', (req, res) => {
 
   // Crear un nuevo usuario
   const newUser = {
+    username,
     _id: users.length + 1, // Se simula un ID único, podría ser generado automáticamente
-    username
   };
   users.push(newUser);
   res.json(newUser);
@@ -90,6 +90,20 @@ app.get('/api/users/:_id/logs', (req, res) => {
   }
 
   res.json(userExercises);
+});
+
+/** HASTA AQUÍ, BIEN */
+
+// Simulación de una base de datos de usuarios
+const usersDatabase = [
+  { username: 'usuario1', _id: 1 },
+  { username: 'usuario2', _id: 2 },
+  { username: 'usuario3', _id: 3 }
+];
+
+// Ruta para obtener la lista de usuarios
+app.get('/api/users', function (req, res) {
+  res.json(usersDatabase);
 });
 
 
