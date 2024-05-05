@@ -82,6 +82,8 @@ app.post('/api/users', (req, res) => {
   users.push(newUser);
   res.json(newUser);
 });
+
+
 // Ruta para agregar un ejercicio a un usuario específico
 app.post('/api/users/:_id/exercises', (req, res) => {
   const { _id } = req.params;
@@ -107,10 +109,10 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   users[userIndex].log.push(newExercise);
 
   // Devolver el objeto de usuario completo con los campos de ejercicio añadidos
-  res.json(users[userIndex]);
+  const updatedUser = users[userIndex];
+  console.log('Respuesta enviada:', updatedUser);
+  res.json(updatedUser);
 });
-
-
 
 
 // Ruta para obtener el registro de ejercicios de un usuario
