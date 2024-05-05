@@ -31,9 +31,31 @@ app.use(bodyParser.json());
 
 // Simulación de una base de datos de usuarios
 const usersDatabase = [
-  { username: 'usuario1', _id: '5fb5853f734231456ccb3b01' },
-  { username: 'usuario2', _id: '5fb5853f734231456ccb3b02' },
-  { username: 'usuario3', _id: '5fb5853f734231456ccb3b03' }
+  {
+    username: "fcc_test",
+    _id: "5fb5853f734231456ccb3b05",
+    count: 1,
+    log: [{
+      description: "test",
+      duration: 60,
+      date: new Date("Mon Jan 01 1990").toDateString(),
+    }]
+  },
+  {
+    username: "otro_usuario",
+    _id: "5fb5853f734231456ccb3b06",
+    count: 2,
+    log: [{
+      description: "prueba",
+      duration: 45,
+      date: new Date("Tue Jan 02 1990").toDateString(),
+    },
+    {
+      description: "ejemplo",
+      duration: 30,
+      date: new Date("Wed Jan 03 1990").toDateString(),
+    }]
+  }
 ];
 
 // Ruta para obtener la lista de usuarios
