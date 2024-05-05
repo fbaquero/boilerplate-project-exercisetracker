@@ -89,21 +89,22 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   const { description, duration, date } = req.body;
 
   // Verificar si el usuario existe
-  const user = users.find(user => user._id == _id);
-  if (!user) {
+  const userIndex = users.findIndex(user => user._id == _id);
+  if (userIndex === -1) {
     return res.status(404).json({ error: 'User not found' });
   }
 
-  // Agregar el ejercicio al registro
+  // Agregar el ejercicio al registro del usuario
   const newExercise = {
-    userId: user._id,
     description,
     duration: parseInt(duration),
     date: date ? new Date(date) : new Date(),
   };
-  exercises.push(newExercise);
-  res.json(newExercise);
+  users[userIndex].log.push(newExercise);
+
+  res.json(users[userIndex]);
 });
+
 
 
 // Ruta para obtener el registro de ejercicios de un usuario
