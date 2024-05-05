@@ -105,6 +105,29 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   res.json(newExercise);
 });
 
+// Ruta para agregar ejercicio a un usuario específico
+app.post('/api/users/:_id/exercises', function (req, res) {
+  const userId = req.params._id;
+  const { description, duration, date } = req.body;
+
+  // Verificar si el usuario existe en la base de datos
+  const userIndex = usersDatabase.findIndex(user => user._id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'Usuario no encontrado' });
+  }
+
+  // Crear el objeto de ejercicio
+  const exercise = { description, duration, date: new Date(date).toDateString() };
+
+  // Agregar el ejercicio al usuario
+  usersDatabase[userIndex].log.push(exercise);
+  usersDatabase[userIndex].count++; // Incrementar el contador de ejercicios
+
+  // Devolver el usuario actualizado con el nuevo ejercicio
+  res.json(usersDatabase[userIndex]);
+});
+
+
 // Ruta para obtener el registro de ejercicios de un usuario
 app.get('/api/users/:_id/logs', (req, res) => {
   const { _id } = req.params;
