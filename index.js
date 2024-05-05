@@ -38,7 +38,9 @@ const usersDatabase = [
 
 // Ruta para obtener la lista de usuarios
 app.get('/api/users', function (req, res) {
-  res.json(usersDatabase);
+  // Mapear cada usuario para devolver solo username y _id
+  const users = usersDatabase.map(user => ({ username: user.username, _id: user._id }));
+  res.json(users);
 });
 
 // Ruta para crear un nuevo usuario
