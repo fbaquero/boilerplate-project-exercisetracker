@@ -120,8 +120,14 @@ app.get('/api/users/:_id/logs', (req, res) => {
   const { _id } = req.params;
   const { from, to, limit } = req.query;
 
+  // Buscar el usuario por su ID
+  const user = usersDatabase.find(user => user._id === _id);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
   // Filtrar ejercicios por usuario
-  let userExercises = exercises.filter(exercise => exercise.userId == _id);
+  let userExercises = user.log || [];
 
   // Filtrar por rango de fechas
   if (from) {
@@ -136,7 +142,14 @@ app.get('/api/users/:_id/logs', (req, res) => {
     userExercises = userExercises.slice(0, parseInt(limit));
   }
 
-  res.json(userExercises);
+  // Calcular el número de ejercicios
+  const exerciseCount = userExercises.length;
+
+  // Crear el objeto de usuario con la propiedad count
+  const userWithCount = { ...user, count: exerciseCount };
+
+  // Devolver el objeto de usuario con la propiedad count
+  res.json(userWithCount);
 });
 
 
