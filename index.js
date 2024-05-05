@@ -31,9 +31,9 @@ app.use(bodyParser.json());
 
 // Simulación de una base de datos de usuarios
 const usersDatabase = [
-  { username: 'usuario1', _id: 1 },
-  { username: 'usuario2', _id: 2 },
-  { username: 'usuario3', _id: 3 }
+  { username: 'usuario1', _id: '5fb5853f734231456ccb3b01' },
+  { username: 'usuario2', _id: '5fb5853f734231456ccb3b02' },
+  { username: 'usuario3', _id: '5fb5853f734231456ccb3b03' }
 ];
 
 // Ruta para obtener la lista de usuarios
