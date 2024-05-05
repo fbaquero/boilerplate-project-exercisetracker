@@ -28,6 +28,19 @@ app.use(cors());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+
+// Simulación de una base de datos de usuarios
+const usersDatabase = [
+  { username: 'usuario1', _id: 1 },
+  { username: 'usuario2', _id: 2 },
+  { username: 'usuario3', _id: 3 }
+];
+
+// Ruta para obtener la lista de usuarios
+app.get('/api/users', function (req, res) {
+  res.json(usersDatabase);
+});
+
 // Ruta para crear un nuevo usuario
 app.post('/api/users', (req, res) => {
   const { username } = req.body;
@@ -92,19 +105,8 @@ app.get('/api/users/:_id/logs', (req, res) => {
   res.json(userExercises);
 });
 
-/** HASTA AQUÍ, BIEN */
 
-// Simulación de una base de datos de usuarios
-const usersDatabase = [
-  { username: 'usuario1', _id: 1 },
-  { username: 'usuario2', _id: 2 },
-  { username: 'usuario3', _id: 3 }
-];
 
-// Ruta para obtener la lista de usuarios
-app.get('/api/users', function (req, res) {
-  res.json(usersDatabase);
-});
 
 
 
