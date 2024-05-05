@@ -82,7 +82,6 @@ app.post('/api/users', (req, res) => {
   users.push(newUser);
   res.json(newUser);
 });
-
 // Ruta para agregar un ejercicio a un usuario específico
 app.post('/api/users/:_id/exercises', (req, res) => {
   const { _id } = req.params;
@@ -94,6 +93,11 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     return res.status(404).json({ error: 'User not found' });
   }
 
+  // Inicializar el campo log si aún no está definido
+  if (!users[userIndex].log) {
+    users[userIndex].log = [];
+  }
+
   // Agregar el ejercicio al registro del usuario
   const newExercise = {
     description,
@@ -102,8 +106,10 @@ app.post('/api/users/:_id/exercises', (req, res) => {
   };
   users[userIndex].log.push(newExercise);
 
+  // Devolver el objeto de usuario completo con los campos de ejercicio añadidos
   res.json(users[userIndex]);
 });
+
 
 
 
