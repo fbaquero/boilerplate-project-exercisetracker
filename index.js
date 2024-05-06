@@ -70,35 +70,6 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
-// Simulación de una base de datos de usuarios
-const usersDatabase = [
-  {
-    username: "fcc_test",
-    _id: "1",
-    count: 1,
-    log: [{
-      description: "test",
-      duration: 60,
-      date: new Date("Mon Jan 01 1990").toDateString(),
-    }]
-  },
-  {
-    username: "otro_usuario",
-    _id: "2",
-    count: 2,
-    log: [{
-      description: "prueba",
-      duration: 45,
-      date: new Date("Tue Jan 02 1990").toDateString(),
-    },
-    {
-      description: "ejemplo",
-      duration: 30,
-      date: new Date("Wed Jan 03 1990").toDateString(),
-    }]
-  }
-];
-
 // Ruta para obtener la lista de usuarios
 app.get('/api/users', async (req, res) => {
   try {
@@ -142,22 +113,38 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
 
   try {
     // Verificar si el usuario existe en la base de datos
-    const user = await User.findById(_id);
+    const user = await User.findById(_id).lean();
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     // Agregar el ejercicio al registro del usuario
-    user.log.push({ description, duration, date: date ? new Date(date) : new Date() });
-    await user.save();
+    const formattedDate = date ? new Date(date).toDateString() : new Date().toDateString();
+    user.log.push({ description, duration, date: formattedDate, _id });
+    await User.updateOne({ _id }, { log: user.log });
 
-    // Devolver el usuario actualizado con los campos de ejercicio añadidos
-    res.json(user);
+    // Devolver el usuario actualizado sin el campo __v
+    delete user.__v;
+
+    const exercise = {
+      username: user.username,
+      description,
+      duration: Number(duration),
+      date: formattedDate,
+      _id: _id // Genera un nuevo ID para el ejercicio
+    };
+
+    console.log("Exercise:", exercise);
+    res.json(exercise);
   } catch (error) {
     console.error("Error adding exercise:", error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+
+
 
 
 // Ruta para obtener el registro de ejercicios de un usuario
@@ -191,11 +178,16 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     // Convertir la propiedad date de cada ejercicio a una cadena en el formato dateString de la API Date
     userExercises = userExercises.map(exercise => ({ ...exercise.toObject(), date: new Date(exercise.date).toDateString() }));
 
+    // Eliminar el campo "__v" del objeto de usuario
+    delete user.__v;
+
     // Calcular el número de ejercicios
     const exerciseCount = userExercises.length;
 
     // Crear el objeto de usuario con la propiedad count
     const userWithCount = { ...user.toObject(), count: exerciseCount, log: userExercises };
+
+    console.log("User with count", userWithCount);
 
     // Devolver el objeto de usuario con la propiedad count y la propiedad date convertida a una cadena
     res.json(userWithCount);
@@ -204,6 +196,7 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
