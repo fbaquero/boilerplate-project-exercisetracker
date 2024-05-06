@@ -45,9 +45,6 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model('User', userSchema);
 
 
-
-
-
 app.use(cors());
 app.use(express.static('public'));
 app.get('/', (req, res) => {
@@ -138,8 +135,6 @@ app.post('/api/users', async (req, res) => {
 });
 
 
-
-
 // Ruta para agregar un ejercicio a un usuario específico
 app.post('/api/users/:_id/exercises', async (req, res) => {
   const { _id } = req.params;
@@ -163,9 +158,6 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
 
 
 // Ruta para obtener el registro de ejercicios de un usuario
@@ -212,13 +204,6 @@ app.get('/api/users/:_id/logs', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-
-
-
-
-
-
-
 
 
 const listener = app.listen(process.env.PORT || 3000, () => {
