@@ -142,11 +142,6 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   }
 });
 
-
-
-
-
-
 // Ruta para obtener el registro de ejercicios de un usuario
 app.get('/api/users/:_id/logs', async (req, res) => {
   const { _id } = req.params;
