@@ -2,7 +2,51 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
 require('dotenv').config();
+
+// Conectar a la base de datos MongoDB
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("Connected to MongoDB successfully!");
+    // Llamar a la función testDB para comprobar la conexión con MongoDB
+    testDB();
+  })
+  .catch((error) => {
+    console.error("Error connecting to MongoDB:", error);
+  });
+
+// Función para comprobar la conexión a la base de datos con un console.log()
+async function testDB() {
+  try {
+    // Comprobar la conexión a la base de datos enviando un ping
+    await mongoose.connection.db.admin().ping();
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
+  }
+}
+
+// Definir el esquema del registro de actividad (log)
+const logSchema = new mongoose.Schema({
+  description: String,
+  duration: Number,
+  date: Date
+});
+
+// Definir el esquema principal del usuario
+const userSchema = new mongoose.Schema({
+  username: String,
+  count: Number,
+  log: [logSchema] // Un array de registros de actividad
+});
+
+// Crear un modelo basado en el esquema del usuario
+const User = mongoose.model('User', userSchema);
+
+
+
+
 
 app.use(cors());
 app.use(express.static('public'));
@@ -33,7 +77,7 @@ app.use(bodyParser.json());
 const usersDatabase = [
   {
     username: "fcc_test",
-    _id: "5fb5853f734231456ccb3b05",
+    _id: "1",
     count: 1,
     log: [{
       description: "test",
@@ -43,7 +87,7 @@ const usersDatabase = [
   },
   {
     username: "otro_usuario",
-    _id: "5fb5853f734231456ccb3b06",
+    _id: "2",
     count: 2,
     log: [{
       description: "prueba",
@@ -59,101 +103,106 @@ const usersDatabase = [
 ];
 
 // Ruta para obtener la lista de usuarios
-app.get('/api/users', function (req, res) {
-  // Mapear cada usuario para devolver solo username y _id
-  const users = usersDatabase.map(user => ({ username: user.username, _id: user._id }));
-  res.json(users);
+app.get('/api/users', async (req, res) => {
+  try {
+    // Buscar todos los usuarios en la base de datos
+    const users = await User.find({}, { username: 1, _id: 1 });
+    res.json(users);
+  } catch (error) {
+    console.error("Error getting users:", error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 // Ruta para crear un nuevo usuario
-app.post('/api/users', (req, res) => {
+app.post('/api/users', async (req, res) => {
   const { username } = req.body;
 
-  // Verificar si el nombre de usuario ya existe
-  if (users.find(user => user.username === username)) {
-    return res.status(400).json({ error: 'Username already exists' });
-  }
+  try {
+    // Verificar si el nombre de usuario ya existe en la base de datos
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
 
-  // Crear un nuevo usuario
-  const newUser = {
-    username,
-    _id: users.length + 1, // Se simula un ID único, podría ser generado automáticamente
-  };
-  users.push(newUser);
-  res.json(newUser);
+    // Crear un nuevo usuario
+    const newUser = new User({ username });
+    await newUser.save();
+    res.json(newUser);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 });
 
 
-// Ruta para agregar un ejercicio a un usuario específico
-app.post('/api/users/:_id/exercises', (req, res) => {
+
+/// Ruta para agregar un ejercicio a un usuario específico
+app.post('/api/users/:_id/exercises', async (req, res) => {
   const { _id } = req.params;
   const { description, duration, date } = req.body;
 
-  // Verificar si el usuario existe
-  const userIndex = users.findIndex(user => user._id == _id);
-  if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    // Verificar si el usuario existe en la base de datos
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Agregar el ejercicio al registro del usuario
+    user.log.push({ description, duration, date: date ? new Date(date) : new Date() });
+    await user.save();
+
+    // Devolver el usuario actualizado
+    res.json(user);
+  } catch (error) {
+    console.error("Error adding exercise:", error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-
-  // Inicializar el campo log si aún no está definido
-  if (!users[userIndex].log) {
-    users[userIndex].log = [];
-  }
-
-  // Agregar el ejercicio al registro del usuario
-  const newExercise = {
-    description,
-    duration: parseInt(duration),
-    date: date ? new Date(date) : new Date(),
-  };
-  users[userIndex].log.push(newExercise);
-
-  // Devolver el objeto de usuario completo con los campos de ejercicio añadidos
-  const updatedUser = users[userIndex];
-  console.log('Respuesta enviada:', updatedUser);
-  res.json(updatedUser);
 });
 
-
 // Ruta para obtener el registro de ejercicios de un usuario
-app.get('/api/users/:_id/logs', (req, res) => {
+app.get('/api/users/:_id/logs', async (req, res) => {
   const { _id } = req.params;
   const { from, to, limit } = req.query;
 
-  // Buscar el usuario por su ID
-  const user = usersDatabase.find(user => user._id === _id);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    // Buscar el usuario por su ID en la base de datos
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Obtener los ejercicios del usuario
+    let userExercises = user.log || [];
+
+    // Filtrar por rango de fechas
+    if (from) {
+      userExercises = userExercises.filter(exercise => new Date(exercise.date) >= new Date(from));
+    }
+    if (to) {
+      userExercises = userExercises.filter(exercise => new Date(exercise.date) <= new Date(to));
+    }
+
+    // Limitar la cantidad de registros
+    if (limit) {
+      userExercises = userExercises.slice(0, parseInt(limit));
+    }
+
+    // Calcular el número de ejercicios
+    const exerciseCount = userExercises.length;
+
+    // Crear el objeto de usuario con la propiedad count
+    const userWithCount = { ...user.toObject(), count: exerciseCount };
+
+    // Devolver el objeto de usuario con la propiedad count
+    res.json(userWithCount);
+  } catch (error) {
+    console.error("Error getting user's exercises:", error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
-
-  // Filtrar ejercicios por usuario
-  let userExercises = user.log || [];
-
-  // Filtrar por rango de fechas
-  if (from) {
-    userExercises = userExercises.filter(exercise => new Date(exercise.date) >= new Date(from));
-  }
-  if (to) {
-    userExercises = userExercises.filter(exercise => new Date(exercise.date) <= new Date(to));
-  }
-
-  // Limitar la cantidad de registros
-  if (limit) {
-    userExercises = userExercises.slice(0, parseInt(limit));
-  }
-
-  // Calcular el número de ejercicios
-  const exerciseCount = userExercises.length;
-
-  // Crear el objeto de usuario con la propiedad count
-  const userWithCount = { ...user, count: exerciseCount };
-
-  // Log para mostrar el objeto de usuario con la propiedad count
-  console.log('Respuesta enviada:', userWithCount);
-
-  // Devolver el objeto de usuario con la propiedad count
-  res.json(userWithCount);
 });
+
 
 
 
