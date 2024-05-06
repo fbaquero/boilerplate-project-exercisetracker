@@ -126,6 +126,7 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     // Devolver el usuario actualizado sin el campo __v
     delete user.__v;
 
+    // Formateamos la salida tal y como la esperan para testeo
     const exercise = {
       username: user.username,
       description,
