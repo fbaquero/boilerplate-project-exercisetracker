@@ -128,7 +128,9 @@ app.post('/api/users', async (req, res) => {
     // Crear un nuevo usuario
     const newUser = new User({ username });
     await newUser.save();
-    res.json(newUser);
+
+    // Devolver solo las propiedades username y _id del usuario creado
+    res.json({ username: newUser.username, _id: newUser._id });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -137,7 +139,8 @@ app.post('/api/users', async (req, res) => {
 
 
 
-/// Ruta para agregar un ejercicio a un usuario específico
+
+// Ruta para agregar un ejercicio a un usuario específico
 app.post('/api/users/:_id/exercises', async (req, res) => {
   const { _id } = req.params;
   const { description, duration, date } = req.body;
@@ -153,13 +156,17 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
     user.log.push({ description, duration, date: date ? new Date(date) : new Date() });
     await user.save();
 
-    // Devolver el usuario actualizado
+    // Devolver el usuario actualizado con los campos de ejercicio añadidos
     res.json(user);
   } catch (error) {
     console.error("Error adding exercise:", error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
+
+
+
 
 // Ruta para obtener el registro de ejercicios de un usuario
 app.get('/api/users/:_id/logs', async (req, res) => {
@@ -189,19 +196,23 @@ app.get('/api/users/:_id/logs', async (req, res) => {
       userExercises = userExercises.slice(0, parseInt(limit));
     }
 
+    // Convertir la propiedad date de cada ejercicio a una cadena en el formato dateString de la API Date
+    userExercises = userExercises.map(exercise => ({ ...exercise.toObject(), date: new Date(exercise.date).toDateString() }));
+
     // Calcular el número de ejercicios
     const exerciseCount = userExercises.length;
 
     // Crear el objeto de usuario con la propiedad count
-    const userWithCount = { ...user.toObject(), count: exerciseCount };
+    const userWithCount = { ...user.toObject(), count: exerciseCount, log: userExercises };
 
-    // Devolver el objeto de usuario con la propiedad count
+    // Devolver el objeto de usuario con la propiedad count y la propiedad date convertida a una cadena
     res.json(userWithCount);
   } catch (error) {
     console.error("Error getting user's exercises:", error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 
 
